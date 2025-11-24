@@ -1,0 +1,73 @@
+#hamming code
+
+#include <iostream>
+using namespace std;
+
+int main() {
+
+    int Data[4];
+    int HammingCode[7];
+
+    // ------------------------------
+    // SENDER SIDE
+    // ------------------------------
+    cout << "Enter 4 data bits (D1 D2 D3 D4): ";
+    for (int i = 0; i < 4; i++)
+        cin >> Data[i];
+
+    // Place data bits
+    HammingCode[2] = Data[0]; 
+    HammingCode[4] = Data[1];
+    HammingCode[5] = Data[2];
+    HammingCode[6] = Data[3];
+
+    // Calculate parity bits (even parity)
+    HammingCode[0] = (HammingCode[2] + HammingCode[4] + HammingCode[6]) % 2; 
+    HammingCode[1] = (HammingCode[2] + HammingCode[5] + HammingCode[6]) % 2; 
+    HammingCode[3] = (HammingCode[4] + HammingCode[5] + HammingCode[6]) % 2;
+
+    cout << "\nGenerated Hamming Code (send this to receiver): ";
+    for (int i = 0; i < 7; i++)
+        cout << HammingCode[i];
+    cout << endl;
+
+    // ------------------------------
+    // RECEIVER SIDE
+    // ------------------------------
+    int Received[7];
+    cout << "\nEnter received 7-bit Hamming Code: ";
+    for (int i = 0; i < 7; i++)
+        cin >> Received[i];
+
+    // Parity checks
+    int c1 = (Received[0] + Received[2] + Received[4] + Received[6]) % 2;
+    int c2 = (Received[1] + Received[2] + Received[5] + Received[6]) % 2;
+    int c4 = (Received[3] + Received[4] + Received[5] + Received[6]) % 2;
+
+    int errorPos = c4 * 4 + c2 * 2 + c1 * 1;
+
+    // Error Handling
+    if (errorPos == 0) {
+        cout << "\nNo error detected." << endl;
+    } 
+    else {
+        cout << "\nError detected at bit position: " << errorPos << endl;
+
+        // Correct the error
+        Received[errorPos - 1] ^= 1;
+
+        cout << "Corrected Code: ";
+        for (int i = 0; i < 7; i++)
+            cout << Received[i];
+        cout << endl;
+    }
+
+    // Extract Data
+    cout << "Extracted Data Bits: ";
+    cout << Received[2] << " " 
+         << Received[4] << " " 
+         << Received[5] << " " 
+         << Received[6] << endl;
+
+    return 0;
+}

@@ -1,0 +1,80 @@
+# distance vector
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "--- Distance Vector Routing Simulation ---\n";
+
+    int n;
+    cout << "Enter number of routers: ";
+    cin >> n;
+    if (n <= 0 || n > 20) {    // limit for safe arrays
+        cout << "Invalid number!";
+        return 0;
+    }
+
+    const int INF = 1000000;
+
+    // Use static arrays instead of vectors
+    int cost[20][20];
+    int dist[20][20];
+
+    cout << "Enter cost matrix (use -1 for no direct link):\n";
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            int x;
+            cin >> x;
+            if (x < 0) cost[i][j] = INF;
+            else cost[i][j] = x;
+        }
+    }
+
+    // Initialize distance vectors
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            dist[i][j] = cost[i][j];
+        }
+        dist[i][i] = 0;
+    }
+
+    cout << "\nRunning distance-vector updates...\n";
+
+    // Bellman-Ford style iterations
+    for (int iter = 0; iter < n - 1; ++iter) {
+        bool changed = false;
+
+        for (int u = 0; u < n; ++u) {
+            for (int v = 0; v < n; ++v) {
+                if (cost[u][v] >= INF) continue;   // no link
+
+                for (int dest = 0; dest < n; ++dest) {
+                    if (dist[v][dest] >= INF) continue;
+
+                    int newCost = cost[u][v] + dist[v][dest];
+
+                    if (newCost < dist[u][dest]) {
+                        dist[u][dest] = newCost;
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (!changed) break;
+    }
+
+    cout << "\nFinal Routing Tables:\n";
+
+    for (int i = 0; i < n; ++i) {
+        cout << "\nRouter " << i << ":\n";
+        for (int j = 0; j < n; ++j) {
+            cout << "  to " << j << " => ";
+            if (dist[i][j] >= INF) cout << "INF";
+            else cout << dist[i][j];
+            cout << "\n";
+        }
+    }
+
+    cout << "\nSimulation complete.\n";
+    return 0;
+}

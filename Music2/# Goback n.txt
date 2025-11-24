@@ -1,0 +1,44 @@
+# Goback n
+
+#include <bits/stdc++.h>
+#include <ctime>
+using namespace std;
+
+void goBackN(int n, int w) {
+    cout << "\n---------- GO BACK N -----------------\n";
+
+    int transmission = 0;
+    int i = 1;
+
+    while (i <= n) {
+
+        cout << "Sending Window: ";
+        for (int j = 0; j < w && i + j <= n; j++) {
+            transmission++;
+            cout << "F" << (i + j) << " ";
+        }
+        cout << endl;
+
+        if (rand() % 2 == 0) {
+            cout << "ERROR! One frame lost. Resending window...\n";
+        } else {
+            cout << "All ACK Received\n";
+            i += w;
+        }
+    }
+
+    cout << "Total Transmissions = " << transmission << "\n";
+}
+
+int main() {
+    srand(time(NULL));
+
+    int n, w;
+    cout << "Enter total number of frames: ";
+    cin >> n;
+    cout << "Enter window size: ";
+    cin >> w;
+
+    goBackN(n, w);
+    return 0;
+}

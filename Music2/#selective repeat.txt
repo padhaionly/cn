@@ -1,0 +1,80 @@
+#selective repeat
+#include <bits/stdc++.h>
+#include <ctime>
+using namespace std;
+
+void selectiveRepeat(int n, int w) {
+    cout << "\n------------- SELECTIVE REPEAT ---------------\n";
+
+    int transmission = 0;
+    int acked[1001] = {0};
+    int i = 1;
+
+    while (i <= n) {
+
+        vector<int> window;
+        for (int j = 0; j < w && i + j <= n; j++) {
+            window.push_back(i + j);
+        }
+
+        cout << "Sending Window: ";
+        for (int f : window) {
+            if (!acked[f]) {
+                transmission++;
+                cout << "F" << f << " ";
+            }
+        }
+        cout << endl;
+
+        vector<int> notAcked;
+        for (int f : window) {
+            if (acked[f]) continue;
+
+            if (rand() % 2 == 0) {
+                cout << "Timeout! Frame " << f << " lost.\n";
+                notAcked.push_back(f);
+            } else {
+                cout << "ACK Received for Frame " << f << endl;
+                acked[f] = 1;
+            }
+        }
+
+        while (!notAcked.empty()) {
+            cout << "Retransmitting Lost Frames: ";
+            vector<int> retry;
+
+            for (int f : notAcked) {
+                transmission++;
+                cout << "F" << f << " ";
+
+                if (rand() % 2 == 0) {
+                    cout << "(Lost) ";
+                    retry.push_back(f);
+                } else {
+                    cout << "(ACK) ";
+                    acked[f] = 1;
+                }
+            }
+            cout << endl;
+
+            notAcked = retry;
+        }
+
+        while (i <= n && acked[i]) i++;
+    }
+
+    cout << "Total Transmissions = " << transmission << "\n";
+}
+
+int main() {
+    srand(time(NULL));
+
+    int n, w;
+    cout << "Enter total number of frames: ";
+    cin >> n;
+    cout << "Enter window size: ";
+    cin >> w;
+
+    selectiveRepeat(n, w);
+    return 0;
+}

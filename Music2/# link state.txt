@@ -1,0 +1,90 @@
+# link state
+#include <iostream>
+#include <limits>
+using namespace std;
+
+const int MAXN = 50;
+const int INF  = 1000000000;
+
+int main() {
+    int N;
+    cout << "Enter number of nodes (<= " << MAXN << "): ";
+    if (!(cin >> N) || N <= 0 || N > MAXN) return 0;
+
+    // read adjacency matrix (use -1 for no direct link)
+    int cost[MAXN][MAXN];
+    cout << "Enter adjacency matrix (" << N << "x" << N << "), -1 for no link:\n";
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            cin >> cost[i][j];
+            if (i == j) cost[i][j] = 0;
+        }
+    }
+
+    // For each node s run Dijkstra (array-based)
+    for (int s = 0; s < N; ++s) {
+        int dist[MAXN];
+        int parent[MAXN];
+        bool used[MAXN];
+
+        // init
+        for (int i = 0; i < N; ++i) {
+            used[i] = false;
+            parent[i] = -1;
+            if (cost[s][i] >= 0) {
+                dist[i] = cost[s][i];
+                if (i != s) parent[i] = s; // direct neighbor's parent is source
+            } else {
+                dist[i] = INF;
+            }
+        }
+        dist[s] = 0;
+        parent[s] = -1;
+
+        // Dijkstra O(N^2)
+        for (int iter = 0; iter < N; ++iter) {
+            int u = -1;
+            int bestd = INF;
+            for (int i = 0; i < N; ++i) {
+                if (!used[i] && dist[i] < bestd) {
+                    bestd = dist[i];
+                    u = i;
+                }
+            }
+            if (u == -1) break; // remaining unreachable
+            used[u] = true;
+
+            // relax neighbors of u
+            for (int v = 0; v < N; ++v) {
+                if (used[v]) continue;
+                if (cost[u][v] >= 0 && dist[u] + cost[u][v] < dist[v]) {
+                    dist[v] = dist[u] + cost[u][v];
+                    parent[v] = u;
+                }
+            }
+        }
+
+        // print routing table for source s
+        cout << "\nRouting table for node " << s << ":\n";
+        cout << "Dest\tCost\tNextHop\n";
+        for (int t = 0; t < N; ++t) {
+            if (dist[t] >= INF) {
+                cout << t << "\t" << "INF" << "\t" << "-" << "\n";
+                continue;
+            }
+            // compute next hop: walk back from t until predecessor is s
+            int next = t;
+            if (t != s) {
+                while (parent[next] != -1 && parent[next] != s) {
+                    next = parent[next];
+                }
+                if (parent[next] == -1) next = -1; // no path
+            }
+            if (t == s) cout << t << "\t" << dist[t] << "\t" << s << "\n";
+            else if (next == -1) cout << t << "\t" << dist[t] << "\t" << "-" << "\n";
+            else cout << t << "\t" << dist[t] << "\t" << next << "\n";
+        }
+    }
+
+    return 0;
+}

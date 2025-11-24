@@ -1,0 +1,93 @@
+#udp
+
+#define _WIN32_WINNT 0x0601
+#include <iostream>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+using namespace std;
+
+// -------------------- UDP SERVER --------------------
+void udpServer()
+{
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    SOCKET s = socket(AF_INET, SOCK_DGRAM, 0);
+
+    sockaddr_in server{}, client{};
+    server.sin_family = AF_INET;
+    server.sin_port = htons(9090);
+    server.sin_addr.s_addr = INADDR_ANY;
+
+    bind(s, (sockaddr *)&server, sizeof(server));
+
+    cout << "UDP Server listening on port 9090...\n";
+
+    char buffer[1024];
+    int clientLen = sizeof(client);
+    int bytes = recvfrom(s, buffer, sizeof(buffer) - 1, 0, (sockaddr *)&client, &clientLen);
+
+    buffer[bytes] = '\0';
+    cout << "Client: " << buffer << endl;
+
+    cout << "Enter reply: ";
+    string reply;
+    getline(cin, reply);
+
+    sendto(s, reply.c_str(), reply.size(), 0, (sockaddr *)&client, clientLen);
+
+    closesocket(s);
+    WSACleanup();
+}
+
+// -------------------- UDP CLIENT --------------------
+void udpClient()
+{
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    SOCKET s = socket(AF_INET, SOCK_DGRAM, 0);
+
+    sockaddr_in server{};
+    server.sin_family = AF_INET;
+    server.sin_port = htons(9090);
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    cout << "Enter message: ";
+    string msg;
+    getline(cin, msg);
+
+    sendto(s, msg.c_str(), msg.size(), 0, (sockaddr *)&server, sizeof(server));
+
+    char buffer[1024];
+    int slen = sizeof(server);
+    int bytes = recvfrom(s, buffer, sizeof(buffer) - 1, 0, (sockaddr *)&server, &slen);
+
+    buffer[bytes] = '\0';
+    cout << "Server: " << buffer << endl;
+
+    closesocket(s);
+    WSACleanup();
+}
+
+// -------------------- MAIN --------------------
+int main()
+{
+    int choice;
+    cout << "1. UDP Server\n";
+    cout << "2. UDP Client\n";
+    cout << "Enter choice: ";
+    cin >> choice;
+    cin.ignore();
+
+    if (choice == 1) udpServer();
+    else if (choice == 2) udpClient();
+    else cout << "Invalid choice\n";
+
+    return 0;
+}
+
+RUn: g++ file.cpp -o filename.exe -lws2_32
+
+.\filename

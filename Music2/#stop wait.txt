@@ -1,0 +1,36 @@
+#stop wait
+#include <bits/stdc++.h>
+#include <ctime>
+using namespace std;
+
+void stopWait(int n) {
+    cout << "\n--------- STOP AND WAIT --------------\n";
+    int transmission = 0;
+
+    for (int i = 1; i <= n; i++) {
+        while (true) {
+            transmission++;
+            cout << "Sending Frame " << i << endl;
+
+            if (rand() % 2 == 0) {
+                cout << "Timeout!! Frame lost... Resending...\n";
+            } else {
+                cout << "ACK Received for Frame " << i << endl;
+                break;
+            }
+        }
+    }
+
+    cout << "Total Transmissions = " << transmission << "\n";
+}
+
+int main() {
+    srand(time(NULL));
+
+    int n;
+    cout << "Enter total number of frames: ";
+    cin >> n;
+
+    stopWait(n);
+    return 0;
+}

@@ -1,0 +1,58 @@
+# crc
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+// Function to compute CRC remainder
+string crcRemainder(string data, const string &poly) {
+    int n = data.size(), m = poly.size();
+    string aug = data + string(m - 1, '0');  // append zeros
+
+    for (int i = 0; i < n; ++i) {
+        if (aug[i] == '1') {                 // perform XOR with poly
+            for (int j = 0; j < m; ++j) {
+                aug[i + j] = (aug[i + j] == poly[j]) ? '0' : '1';
+            }
+        }
+    }
+
+    return aug.substr(n);   // return last (m-1) bits (remainder)
+}
+
+int main() {
+    string data, poly;
+
+    cout << "Enter data bits: ";
+    cin >> data;
+
+    cout << "Enter divisor (generator polynomial): ";
+    cin >> poly;
+
+    // Sender side
+    string rem = crcRemainder(data, poly);
+    cout << "\nSender CRC Remainder: " << rem << endl;
+
+    string transmitted = data + rem;
+    cout << "Transmitted Frame: " << transmitted << endl;
+
+    // Receiver side (now user enters received bits)
+    string received;
+    cout << "\nEnter received frame: ";
+    cin >> received;
+
+    // Check remainder on receiver side
+    string check = crcRemainder(received.substr(0, data.size()), poly);
+
+    if (check == received.substr(data.size()))
+        cout << "No error detected (exact CRC match).\n";
+    else {
+        string r = crcRemainder(received, poly);
+        if (r.find('1') == string::npos)
+            cout << "No error detected.\n";
+        else
+            cout << "Error detected at receiver side!\n";
+    }
+
+    return 0;
+}

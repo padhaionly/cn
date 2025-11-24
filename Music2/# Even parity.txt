@@ -1,0 +1,65 @@
+# Even parity
+
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    cout << "Enter number of data bits: ";
+    cin >> n;
+
+    int data[100];  // array for data bits
+    int ones = 0;
+
+    cout << "Enter the data bits (0/1): ";
+    for (int i = 0; i < n; i++) {
+        cin >> data[i];
+        if (data[i] == 1)
+            ones++;
+    }
+
+    // --- Sender Side ---
+    cout << "\n--- Sender Side ---\n";
+    cout << "Number of 1s in data = " << ones << endl;
+
+    int parityBit;
+    if (ones % 2 == 0) {
+        parityBit = 0;  // even parity
+        cout << "Even number of 1s → Parity bit added = 0\n";
+    } 
+    else {
+        parityBit = 1;
+        cout << "Odd number of 1s → Parity bit added = 1\n";
+    }
+
+    cout << "Transmitted Data: ";
+    for (int i = 0; i < n; i++)
+        cout << data[i];
+    cout << parityBit << endl;  // sending parity
+
+    // --- Receiver Side ---
+    cout << "\n--- Receiver Side ---\n";
+    
+    int recvSize = n + 1;
+    int recv[101];
+
+    cout << "Enter received bits (" << recvSize << " bits): ";
+    for (int i = 0; i < recvSize; i++) {
+        cin >> recv[i];
+    }
+
+    int recOnes = 0;
+    for (int i = 0; i < recvSize; i++) {
+        if (recv[i] == 1)
+            recOnes++;
+    }
+
+    cout << "Number of 1s (including parity bit) = " << recOnes << endl;
+
+    if (recOnes % 2 == 0)
+        cout << "STATUS: No Error Detected\n";
+    else
+        cout << "STATUS: Error Detected!\n";
+
+    return 0;
+}

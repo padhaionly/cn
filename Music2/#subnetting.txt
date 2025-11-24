@@ -1,0 +1,107 @@
+#subnetting
+#include <iostream>
+using namespace std;
+
+// ---------- Helpers ----------
+char findClass(int firstOctet) {
+    if (firstOctet <= 126) return 'A';
+    if (firstOctet <= 191) return 'B';
+    if (firstOctet <= 223) return 'C';
+    if (firstOctet <= 239) return 'D';
+    return 'E';
+}
+
+int getDefaultPrefix(char c) {
+    if (c == 'A') return 8;
+    if (c == 'B') return 16;
+    if (c == 'C') return 24;
+    return -1;
+}
+
+void printIP(unsigned int ip) {
+    cout << ((ip >> 24) & 255) << "."
+         << ((ip >> 16) & 255) << "."
+         << ((ip >> 8) & 255)  << "."
+         << (ip & 255);
+}
+
+int main() {
+    int ipArr[4];
+    char dot;
+
+    cout << "Enter IP address (e.g., 192.168.1.0): ";
+    cin >> ipArr[0] >> dot >> ipArr[1] >> dot >> ipArr[2] >> dot >> ipArr[3];
+
+    char ipClass = findClass(ipArr[0]);
+    cout << "\nIP Class: " << ipClass << endl;
+
+    int defaultPrefix = getDefaultPrefix(ipClass);
+    if (defaultPrefix == -1) {
+        cout << "Subnetting not allowed for Class " << ipClass << endl;
+        return 0;
+    }
+
+    cout << "Default Prefix: /" << defaultPrefix << endl;
+
+    unsigned int defaultMask = 0xFFFFFFFF << (32 - defaultPrefix);
+    cout << "Default Subnet Mask: ";
+    printIP(defaultMask);
+    cout << endl;
+
+    int numSubnets;
+    cout << "\nEnter number of subnets: ";
+    cin >> numSubnets;
+
+    if (numSubnets <= 0) {
+        cout << "Invalid number of subnets.\n";
+        return 0;
+    }
+
+    // ---------- Calculate bits needed ----------
+    int bitsNeeded = 0;
+    while ((1 << bitsNeeded) < numSubnets) bitsNeeded++;
+
+    int newPrefix = defaultPrefix + bitsNeeded;
+    if (newPrefix > 30) {
+        cout << "Too many subnets requested!\n";
+        return 0;
+    }
+
+    unsigned int mask = 0xFFFFFFFF << (32 - newPrefix);
+
+    // Pack IP into 32-bit integer
+    unsigned int ip = (ipArr[0] << 24) | (ipArr[1] << 16) | (ipArr[2] << 8) | ipArr[3];
+
+    unsigned int subnetSize = 1u << (32 - newPrefix);
+    int totalSubnets = 1 << bitsNeeded;
+
+    cout << "\nNew Subnet Mask: ";
+    printIP(mask);
+    cout << " (/" << newPrefix << ")\n";
+
+    cout << "Total Subnets: " << totalSubnets << endl;
+    cout << "Hosts per Subnet: " << subnetSize - 2 << endl;
+
+    // ---------- Print subnets ----------
+    cout << "\n===== Subnet Details =====\n";
+
+    unsigned int networkBase = ip & (defaultMask);  // stay inside parent block
+
+    for (int i = 0; i < totalSubnets; i++) {
+        unsigned int network = networkBase + (i * subnetSize);
+        unsigned int broadcast = network + subnetSize - 1;
+
+        cout << "\nSubnet " << (i + 1) << ":\n";
+        cout << "  Network: ";
+        printIP(network);
+        cout << "\n  Broadcast: ";
+        printIP(broadcast);
+        cout << "\n  First Host: ";
+        printIP(network + 1);
+        cout << "\n  Last Host : ";
+        printIP(broadcast - 1);
+        cout << "\n";
+    }
+
+    return 0;
+}
