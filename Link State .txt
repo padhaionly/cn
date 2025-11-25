@@ -1,0 +1,102 @@
+// Link State Routing using Dijkstra Algorithm
+// Shows step-by-step shortest path updates (like a real Link-State router)
+
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int n;
+    int cost[10][10];      // Cost matrix
+    int dist[10];          // Distance array for Dijkstra
+    int visited[10];       // Visited set
+    int finalTable[10][10]; // Final shortest path table
+
+    cout << "Enter number of nodes: ";
+    cin >> n;
+
+    cout << "Enter cost adjacency matrix (0 for self, 999 for no link):\n";
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            cin >> cost[i][j];
+
+
+    // Run Dijkstra for EACH node
+
+    for (int src = 0; src < n; src++)
+    {
+        // Initialize
+        for (int i = 0; i < n; i++)
+        {
+            dist[i] = cost[src][i];
+            visited[i] = 0;
+        }
+        dist[src] = 0;   // Source to itself = 0
+        visited[src] = 1;
+
+
+        cout << "\nDijkstra from Node " << src;
+
+
+        // Start Dijkstra iteration
+        for (int step = 1; step < n; step++)
+        {
+            // Find the unvisited node with minimum distance
+            int min = 999, u = -1;
+            for (int i = 0; i < n; i++)
+            {
+                if (!visited[i] && dist[i] < min)
+                {
+                    min = dist[i];
+                    u = i;
+                }
+            }
+
+            if (u == -1) break;  // No more reachable nodes
+
+            visited[u] = 1;
+
+            // Relax edges from node u
+            for (int v = 0; v < n; v++)
+            {
+                if (!visited[v] && dist[v] > dist[u] + cost[u][v])
+                {
+                    dist[v] = dist[u] + cost[u][v];
+                }
+            }
+
+            // Print stage-wise update
+            cout << "\n-- After Step " << step << " (Added node " << u << ") --\n";
+            cout << "Distances from node " << src << ":\n";
+            for (int i = 0; i < n; i++)
+                cout << dist[i] << "\t";
+            cout << endl;
+        }
+
+        // Store result for final table
+        for (int i = 0; i < n; i++)
+            finalTable[src][i] = dist[i];
+    }
+
+
+    // Print Final Routing Table
+
+    cout << "\n\nFinal Link-State Routing Table (Shortest Paths):\n";
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+            cout << finalTable[i][j] << "\t";
+        cout << endl;
+    }
+
+    return 0;
+}
+
+
+/* 
+Nodes = 4
+0   3   999  7
+3   0   2    999
+999 2   0    1
+7   999 1    0
+*/
