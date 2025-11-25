@@ -1,0 +1,129 @@
+#include <iostream>
+using namespace std;
+
+// compute mask bytes from prefix (e.g. /24 -> 255.255.255.0)
+void prefixToMask(int prefix, int mask[4]) {
+    int bits = prefix;
+    for (int i = 0; i < 4; ++i) {
+        if (bits >= 8) {
+            mask[i] = 255;
+            bits -= 8;
+        } else if (bits <= 0) {
+            mask[i] = 0;
+        } else {
+            mask[i] = 256 - (1 << (8 - bits)); 
+            bits = 0;
+        }
+    }
+}
+
+// bitwise AND of ip and mask -> network address
+void calcNetwork(int ip[4], int mask[4], int net[4]) {
+    for (int i = 0; i < 4; ++i) net[i] = ip[i] & mask[i];
+}
+
+// network OR (~mask) -> broadcast address
+void calcBroadcast(int net[4], int mask[4], int broad[4]) {
+    for (int i = 0; i < 4; ++i) {
+        int inv = (~mask[i]) & 0xFF;      // inverse of mask byte
+        broad[i] = net[i] | inv;
+    }
+}
+
+// add offset (positive or negative) to an IP (handles carry/borrow)
+void addOffset(int in[4], int offset, int out[4]) {
+    for (int i = 0; i < 4; ++i) out[i] = in[i];
+    int carry = offset;
+    int idx = 3;
+    while ((carry != 0) && (idx >= 0)) {
+        int val = out[idx] + carry;
+        // handle negative offsets too
+        if (val >= 0) {
+            out[idx] = val % 256;
+            carry = val / 256;
+        } else {
+            // borrow in case val < 0
+            // compute borrow count: how many 256 we need to add
+            int borrow = ( (-val) + 255 ) / 256;
+            out[idx] = (val + borrow * 256) % 256;
+            carry = -borrow;
+        }
+        --idx;
+    }
+}
+
+// convert class from first octet
+const char* ipClass(int first) {
+    if (first >= 1 && first <= 126) return "A";
+    if (first == 127) return "Loopback (127.x.x.x)";
+    if (first >= 128 && first <= 191) return "B";
+    if (first >= 192 && first <= 223) return "C";
+    if (first >= 224 && first <= 239) return "D (Multicast)";
+    return "E (Experimental)";
+}
+
+// print IP array as dotted decimal
+void printIP(int a[4]) {
+    cout << a[0] << "." << a[1] << "." << a[2] << "." << a[3];
+}
+
+int main() {
+    int ip[4], prefix, systems;
+    cout << "Enter IP (4 octets): ";
+    for (int i = 0; i < 4; ++i) cin >> ip[i];
+    cout << "Enter prefix length (0-32): ";
+    cin >> prefix;
+    cout << "Enter number of systems to allocate: ";
+    cin >> systems;
+
+    int mask[4], net[4], broad[4];
+    prefixToMask(prefix, mask);           // compute subnet mask
+    calcNetwork(ip, mask, net);           // compute network address
+    calcBroadcast(net, mask, broad);      // compute broadcast address
+
+    int hostBits = 32 - prefix;
+    int usable = 0;
+    if (hostBits >= 2) usable = (1 << hostBits) - 2; // usable hosts for normal subnets
+
+    // compute first and last usable (if any)
+    int first[4], last[4];
+    if (usable > 0) {
+        addOffset(net, 1, first);         // network + 1
+        addOffset(broad, -1, last);       // broadcast - 1
+    }
+
+    // Display results
+    cout << "\n--- Subnet Details for ";
+    printIP(net); cout << "/" << prefix << " ---\n";
+    cout << "IP Class        : " << ipClass(ip[0]) << "\n";
+    cout << "Subnet Mask     : "; printIP(mask); cout << "\n";
+    cout << "Network Address : "; printIP(net); cout << "\n";
+    cout << "Broadcast Addr  : "; printIP(broad); cout << "\n";
+    cout << "Usable Hosts    : " << usable << "\n";
+    if (usable > 0) {
+        cout << "First Usable    : "; printIP(first); cout << "\n";
+        cout << "Last Usable     : "; printIP(last); cout << "\n";
+    } else {
+        cout << "First Usable    : N/A\n";
+        cout << "Last Usable     : N/A\n";
+    }
+
+    // Simple allocation listing (if fits)
+    if (usable > 0 && systems > 0) {
+        if (systems > usable) {
+            cout << "\nCannot allocate " << systems << " systems; only " << usable << " usable addresses.\n";
+        } else {
+            cout << "\nAllocating addresses:\n";
+            int cur[4];
+            addOffset(net, 1, cur);           // start at first usable
+            for (int i = 0; i < systems; ++i) {
+                cout << "  Host " << i+1 << ": ";
+                printIP(cur);
+                cout << "\n";
+                addOffset(cur, 1, cur);      // move to next IP
+            }
+        }
+    }
+
+    return 0;
+}
