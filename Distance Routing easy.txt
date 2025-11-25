@@ -1,0 +1,83 @@
+
+// Distance Vector Routing with Stage-Wise Table Printing
+
+
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int n;
+    int cost[10][10];
+    int dist[10][10];
+
+    cout << "Enter number of nodes: ";
+    cin >> n;
+
+    cout << "Enter cost adjacency matrix (0 for self, 999 for no link):\n";
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            cin >> cost[i][j];
+            dist[i][j] = cost[i][j];  // Initialize
+        }
+    }
+
+    // Print Initial Table
+    cout << "\nInitial Distance Table:\n";
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+            cout << dist[i][j] << "\t";
+        cout << endl;
+    }
+
+    // Apply Distance Vector Algorithm (Bellman-Ford)
+    for (int k = 0; k < n; k++)
+    {
+        cout << "\n--- Stage " << k + 1 << " (Using node " << k << ") ---\n";
+
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (dist[i][j] > dist[i][k] + dist[k][j])
+                {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+
+        // Print table after this stage
+        cout << "Distance Table after Stage " << k + 1 << ":\n";
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+                cout << dist[i][j] << "\t";
+            cout << endl;
+        }
+    }
+
+    // Final Output
+    cout << "\nFinal Distance Vector Table:\n";
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+            cout << dist[i][j] << "\t";
+        cout << endl;
+    }
+
+    return 0;
+}
+
+
+/*
+Enter number of nodes: 4
+Enter cost adjacency matrix (0 for self, 999 for no link):
+0   3   999  7
+3   0   2    999
+999 2   0    1
+7   999 1    0
+
+*/
